@@ -1,0 +1,39 @@
+<main class="admin-page">
+  <mat-toolbar color="primary" class="admin-toolbar">
+    <div class="toolbar-title">Admin de Pedidos</div>
+  </mat-toolbar>
+
+  <section class="admin-summary">
+    <div class="summary-card">
+      <strong>Pedidos totales:</strong> {{ orders().length }}
+    </div>
+    <div class="summary-card status-message" *ngIf="actionMessage()">
+      {{ actionMessage() }}
+    </div>
+  </section>
+
+  <section class="orders-list">
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Tel</th>
+          <th>Torre</th>
+          <th>Apto</th>
+          <th>Total</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders()" (click)="openOrder(order)">
+          <td>{{ order.customerName || order.customer?.name || '-' }}</td>
+          <td>{{ order.phone || order.customer?.phone || '-' }}</td>
+          <td>{{ order.tower || order.customer?.tower || '-' }}</td>
+          <td>{{ order.apartment || order.customer?.apartment || '-' }}</td>
+          <td>{{ (order.total ?? formatTotal(order)) | currency:'COP':'symbol':'1.0-2' }}</td>
+          <td>{{ order.state || 'CREATED' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>

@@ -1,0 +1,99 @@
+<main class="catalog-page">
+  <mat-toolbar color="primary" class="catalog-toolbar">
+    <div class="toolbar-content">
+      <div class="toolbar-title">Catálogo del Supermercado</div>
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar producto</mat-label>
+        <input
+          matInput
+          type="search"
+          placeholder="Ej. pan, leche, huevos"
+          (input)="searchTerm.set($any($event.target).value)"
+        />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+  </mat-toolbar>
+
+  <section class="catalog-header">
+    <div class="header-text">
+      <h1>Haz tu pedido</h1>
+      <p>Selecciona los productos que quieras comprar y agrégalos a tu carrito.</p>
+    </div>
+    <div class="header-cart" (click)="openCart()">
+      <button
+        mat-icon-button
+        matTooltip="Ver carrito"
+        [matBadge]="cartItemCount()"
+        matBadgeColor="accent"
+        [matBadgeHidden]="cartItemCount() === 0"
+        class="cart-button"
+      >
+        <mat-icon>shopping_cart</mat-icon>
+      </button>
+      <span class="cart-label">{{ cartItemCount() }} item{{ cartItemCount() !== 1 ? 's' : '' }}</span>
+    </div>
+  </section>
+
+  <section class="product-grid">
+    <article class="product-card empty-state" *ngIf="filteredProducts().length === 0">
+      <mat-card>
+        <p>No se encontraron productos para "{{ searchTerm() }}".</p>
+      </mat-card>
+    </article>
+    <article class="product-card" *ngFor="let product of filteredProducts()">
+      <mat-card>
+        <div class="product-image" aria-hidden="true">
+          {{ product.name.charAt(0) }}
+        </div>
+
+        <mat-card-header>
+          <mat-card-title>{{ product.name }}</mat-card-title>
+          <mat-card-subtitle>{{ product.category }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="product-meta">
+            <span class="product-price">{{ product.price | currency:'COP':'symbol':'1.0-2' }}</span>
+            <div class="quantity-control">
+              <button
+                mat-mini-fab
+                color="primary"
+                type="button"
+                aria-label="Restar cantidad"
+                (click)="changeQuantity(product.id, -1)"
+                [disabled]="getQuantity(product.id) === 1"
+              >
+                <mat-icon>remove</mat-icon>
+              </button>
+              <span class="quantity-value">{{ getQuantity(product.id) }}</span>
+              <button
+                mat-mini-fab
+                color="primary"
+                type="button"
+                aria-label="Agregar cantidad"
+                (click)="changeQuantity(product.id, 1)"
+              >
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-flat-button color="primary" (click)="addToCart(product)" [disabled]="!product.available">
+            <mat-icon>shopping_cart</mat-icon>
+            Pedir
+          </button>
+          <button mat-stroked-button disabled>
+            {{ product.available ? 'Disponible' : 'Agotado' }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </article>
+  </section>
+
+  <div class="order-message" *ngIf="orderMessage()">
+    {{ orderMessage() }}
+  </div>
+</main>

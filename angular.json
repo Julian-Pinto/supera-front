@@ -2,7 +2,8 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "npm",
+    "analytics": "9472e62e-c261-4805-8192-47d22380c86a"
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -72,7 +73,8 @@
               "buildTarget": "supera:build:production"
             },
             "development": {
-              "buildTarget": "supera:build:development"
+              "buildTarget": "supera:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

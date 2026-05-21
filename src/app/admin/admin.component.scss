@@ -1,0 +1,93 @@
+.admin-page {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toolbar-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.admin-summary {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.summary-card {
+  padding: 1rem;
+  border-radius: 12px;
+  background: #f4f6fb;
+  color: #1f2a60;
+  min-width: 200px;
+}
+
+.status-message {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.orders-list {
+  overflow-x: auto;
+}
+
+.orders-list table,
+.order-items table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-list th,
+.orders-list td,
+.order-items th,
+.order-items td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.orders-list tr:hover,
+.orders-list tr.selected {
+  background: rgba(33, 150, 243, 0.08);
+}
+
+.order-detail {
+  border-radius: 14px;
+  padding: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.detail-header h2 {
+  margin: 0 0 0.5rem;
+}
+
+.order-items h3 {
+  margin: 0 0 0.75rem;
+}
+
+.order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.status-field {
+  min-width: 220px;
+}
+
+.order-total {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
