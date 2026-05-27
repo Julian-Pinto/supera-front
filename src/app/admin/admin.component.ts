@@ -1,10 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Order, OrderService, OrderState } from '../services/order.service';
+import { AuthService } from '../auth.service';
+import { Order, OrderItem, OrderService, OrderState } from '../services/order.service';
 import { AdminOrderDialogComponent } from './admin-order-dialog.component';
 
 @Component({
@@ -26,7 +28,9 @@ export class AdminComponent {
   readonly orderStates: OrderState[] = ['CREATED', 'PROCESSING', 'COMPLETED', 'CANCELLED'];
 
   private readonly orderService = inject(OrderService);
+  private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
 
   constructor() {
     this.loadOrders();
@@ -70,10 +74,46 @@ export class AdminComponent {
   }
 
   getItemCount(order: Order): number {
-    return order.items.reduce((sum, item) => sum + item.quantity, 0);
+    return order.items.reduce((sum, item) => sum + this.getItemQuantity(item), 0);
   }
 
   formatTotal(order: Order): number {
-    return order.total ?? order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return order.total ?? order.items.reduce((sum, item) => sum + this.getItemQuantity(item) * this.getItemUnitPrice(item), 0);
+  }
+
+  markOrderConfirmed(order: Order): void {
+    if (!order.id) {
+      return;
+    }
+
+    const updatedOrder: Order = {
+      ...order,
+      state: 'CONFIRMED',
+    };
+
+    this.orderService.update(order.id, updatedOrder).subscribe({
+      next: (savedOrder) => {
+        this.orders.update((orders) =>
+          orders.map((item) => (item.id === order.id ? savedOrder : item))
+        );
+        this.actionMessage.set(`Pedido ${order.id} actualizado a CONFIRMED`);
+      },
+      error: () => {
+        this.actionMessage.set(`No se pudo actualizar el pedido ${order.id}`);
+      },
+    });
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  private getItemQuantity(item: OrderItem): number {
+    return item.quantity ?? item.amount ?? 0;
+  }
+
+  private getItemUnitPrice(item: OrderItem): number {
+    return item.price ?? item.unitPrice ?? 0;
   }
 }

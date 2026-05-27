@@ -170,6 +170,11 @@ mat-card-actions {
   padding: 0 1rem 1rem;
 }
 
+.mat-stroked-button.sold-out {
+  color: #d32f2f;
+  border-color: #d32f2f;
+}
+
 .product-meta {
   display: flex;
   justify-content: space-between;

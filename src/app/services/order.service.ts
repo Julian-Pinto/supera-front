@@ -2,13 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export type OrderState = 'CREATED' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
+export type OrderState = 'CREATED' | 'CONFIRMED' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
 
 export interface OrderItem {
-  productId: number;
-  quantity: number;
-  price: number;
+  productId: string | number;
+  quantity?: number;
+  amount?: number;
+  price?: number;
+  unitPrice?: number;
   name?: string;
+  category?: string | null;
+  subTotal?: number;
 }
 
 export interface Order {

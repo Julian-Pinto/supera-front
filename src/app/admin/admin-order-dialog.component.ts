@@ -11,11 +11,6 @@ import { Order } from '../services/order.service';
   imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
   template: `
     <div class="dialog-header">
-      <div>
-        <h2>Detalle del pedido {{ data.id }}</h2>
-        <p class="customer-line">Cliente: {{ data.customer.name }}</p>
-        <p class="customer-line">Tel: {{ data.customer.phone || '-' }} · Torre: {{ data.customer.tower || '-' }} · Apto: {{ data.customer.apartment || '-' }}</p>
-      </div>
       <button mat-icon-button aria-label="Cerrar" (click)="dialogRef.close()">
         <mat-icon>close</mat-icon>
       </button>
@@ -33,10 +28,10 @@ import { Order } from '../services/order.service';
         </thead>
         <tbody>
           <tr *ngFor="let item of data.items">
-            <td>{{ item.quantity }}</td>
+            <td>{{ getItemQuantity(item) ?? '-' }}</td>
             <td>{{ item.name || ('Producto ' + item.productId) }}</td>
-            <td>{{ item.price | currency:'COP':'symbol':'1.0-2' }}</td>
-            <td>{{ item.price * item.quantity | currency:'COP':'symbol':'1.0-2' }}</td>
+            <td>{{ getItemUnitPrice(item) != null ? (getItemUnitPrice(item) | currency:'COP':'symbol':'1.0-2') : '-' }}</td>
+            <td>{{ getItemTotal(item) != null ? (getItemTotal(item) | currency:'COP':'symbol':'1.0-2') : '-' }}</td>
           </tr>
         </tbody>
       </table>
@@ -48,6 +43,12 @@ import { Order } from '../services/order.service';
     </footer>
   `,
   styles: [`
+    :host {
+      display: block;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+
     .dialog-header {
       display: flex;
       justify-content: space-between;
@@ -98,7 +99,21 @@ export class AdminOrderDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: Order
   ) {}
 
+  getItemQuantity(item: { quantity?: number; amount?: number }): number | undefined {
+    return item.quantity ?? item.amount;
+  }
+
+  getItemUnitPrice(item: { price?: number; unitPrice?: number }): number | undefined {
+    return item.price ?? item.unitPrice;
+  }
+
+  getItemTotal(item: { subTotal?: number; price?: number; unitPrice?: number; quantity?: number; amount?: number }): number | undefined {
+    const quantity = this.getItemQuantity(item);
+    const unitPrice = this.getItemUnitPrice(item);
+    return item.subTotal ?? (quantity != null && unitPrice != null ? quantity * unitPrice : undefined);
+  }
+
   calculateTotal(): number {
-    return this.data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return this.data.items.reduce((sum, item) => sum + (this.getItemTotal(item) ?? 0), 0);
   }
 }
