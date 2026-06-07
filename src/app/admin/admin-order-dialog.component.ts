@@ -13,8 +13,8 @@ import { Order } from '../services/order.service';
     <div class="dialog-header">
       <div>
         <h2>Detalle del pedido {{ data.id }}</h2>
-        <p class="customer-line">Cliente: {{ data.customer.name }}</p>
-        <p class="customer-line">Tel: {{ data.customer.phone || '-' }} · Torre: {{ data.customer.tower || '-' }} · Apto: {{ data.customer.apartment || '-' }}</p>
+        <p class="customer-line"><strong>Cliente:</strong> {{ data.customer?.name || data.customerName || '-' }}</p>
+        <p class="customer-line"><strong>Tel:</strong> {{ data.customer?.phone || data.phone || '-' }} · <strong>Torre:</strong> {{ data.customer?.tower || data.tower || '-' }} · <strong>Apto:</strong> {{ data.customer?.apartment || data.apartment || '-' }}</p>
       </div>
       <button mat-icon-button aria-label="Cerrar" (click)="dialogRef.close()">
         <mat-icon>close</mat-icon>
@@ -33,10 +33,10 @@ import { Order } from '../services/order.service';
         </thead>
         <tbody>
           <tr *ngFor="let item of data.items">
-            <td>{{ item.quantity }}</td>
-            <td>{{ item.name || ('Producto ' + item.productId) }}</td>
-            <td>{{ item.price | currency:'COP':'symbol':'1.0-2' }}</td>
-            <td>{{ item.price * item.quantity | currency:'COP':'symbol':'1.0-2' }}</td>
+            <td>{{ item.amount ?? item.quantity ?? 0 }}</td>
+            <td>{{ item.productId }}</td>
+            <td>{{ (item.unitPrice ?? item.price ?? 0) | currency:'COP ':'symbol':'1.0-2' }}</td>
+            <td>{{ (item.subTotal ?? ((item.unitPrice ?? item.price ?? 0) * (item.amount ?? item.quantity ?? 0))) | currency:'COP ':'symbol':'1.0-2' }}</td>
           </tr>
         </tbody>
       </table>
@@ -44,7 +44,7 @@ import { Order } from '../services/order.service';
 
     <footer class="dialog-footer">
       <span>Total del pedido:</span>
-      <strong>{{ data.total ?? calculateTotal() | currency:'COP':'symbol':'1.0-2' }}</strong>
+      <strong>{{ data.total ?? calculateTotal() | currency:'COP ':'symbol':'1.0-2' }}</strong>
     </footer>
   `,
   styles: [`
@@ -99,6 +99,6 @@ export class AdminOrderDialogComponent {
   ) {}
 
   calculateTotal(): number {
-    return this.data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return this.data.items.reduce((sum, item) => sum + (item.subTotal ?? ((item.unitPrice ?? item.price ?? 0) * (item.amount ?? item.quantity ?? 0))), 0);
   }
 }

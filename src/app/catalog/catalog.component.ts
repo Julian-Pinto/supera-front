@@ -10,7 +10,9 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CartModalComponent, CartItem } from './cart-modal.component';
+import { OrderDisabledDialogComponent } from './order-disabled-dialog.component';
 import { ProductService, Product } from '../services/product.service';
+import { OrderAvailabilityService } from '../services/order-availability.service';
 import { OrderService } from '../services/order.service';
 
 @Component({
@@ -37,13 +39,13 @@ export class CatalogComponent {
 
   orderMessage = signal('');
   searchTerm = signal('');
-  productQuantities = signal<Record<number, number>>({});
+  productQuantities = signal<Record<string, number>>({});
 
-  getQuantity(productId: number): number {
+  getQuantity(productId: string): number {
     return this.productQuantities()[productId] ?? 1;
   }
 
-  changeQuantity(productId: number, delta: number): void {
+  changeQuantity(productId: string, delta: number): void {
     const current = this.getQuantity(productId);
     const next = Math.max(1, current + delta);
     this.productQuantities.update((state) => ({
@@ -71,6 +73,11 @@ export class CatalogComponent {
 
   private productService = inject(ProductService);
   private orderService = inject(OrderService);
+  private orderAvailabilityService = inject(OrderAvailabilityService);
+
+  get ordersEnabled(): boolean {
+    return this.orderAvailabilityService.enabled();
+  }
 
   constructor() {
     this.loadProducts();
@@ -94,6 +101,11 @@ export class CatalogComponent {
   });
 
   addToCart(product: Product): void {
+    if (!this.orderAvailabilityService.enabled()) {
+      this.showOrderDisabledDialog();
+      return;
+    }
+
     const quantity = this.getQuantity(product.id);
     const existingItem = this.cart().find((item) => item.id === product.id);
 
@@ -117,6 +129,12 @@ export class CatalogComponent {
     }
 
     this.orderMessage.set(`${product.name} (x${quantity}) agregado al carrito`);
+  }
+
+  private showOrderDisabledDialog(): void {
+    this.dialog.open(OrderDisabledDialogComponent, {
+      width: '480px',
+    });
   }
 
   openCart(): void {

@@ -10,7 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 
 export interface CartItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -132,10 +132,10 @@ export interface CartItem {
           <mat-icon>arrow_back</mat-icon>
           Atrás
         </button>
-        <button mat-flat-button color="primary" *ngIf="!isCheckoutStage && getItemsToDisplay().length > 0" (click)="startCheckout()">
+        <button mat-flat-button class="confirm-order-btn" *ngIf="!isCheckoutStage && getItemsToDisplay().length > 0" (click)="startCheckout()">
           Confirmar Pedido
         </button>
-        <button mat-flat-button color="primary" *ngIf="isCheckoutStage" (click)="placeOrder()" [disabled]="isOrderFormInvalid()">
+        <button mat-flat-button color="primary" class="confirm-order-btn" *ngIf="isCheckoutStage" (click)="placeOrder()" [disabled]="isOrderFormInvalid()">
           Realizar Pedido
         </button>
         <button mat-flat-button color="primary" *ngIf="getItemsToDisplay().length === 0" (click)="dialogRef.close()">
@@ -217,7 +217,7 @@ export interface CartItem {
 
     .product-name {
       font-weight: 600;
-      color: #1a237e;
+      color: #024e31;
     }
 
     .product-category {
@@ -235,7 +235,7 @@ export interface CartItem {
 
     .subtotal {
       font-weight: 600;
-      color: #1a237e;
+      color: #024e31;
     }
 
     .empty-state {
@@ -270,7 +270,7 @@ export interface CartItem {
     }
 
     .total {
-      color: #1a237e;
+      color: #024e31;
       min-width: 6rem;
     }
 
@@ -314,6 +314,11 @@ export interface CartItem {
       text-align: center;
       width: 100%;
       margin: 0 0 1rem;
+    }
+
+    .confirm-order-btn {
+      background-color: #062e30 !important;
+      color: #ffffff !important;
     }
   `],
 })
@@ -374,7 +379,7 @@ export class CartModalComponent {
   }
 
   private isPhoneValid(): boolean {
-    return /^3\d{9}$/.test(this.phone.trim());
+    return /^\d{7,15}$/.test(this.phone.trim());
   }
 
   isOrderFormInvalid(): boolean {
@@ -383,7 +388,7 @@ export class CartModalComponent {
       !this.apartment.trim() ||
       !this.phone.trim() ||
       this.apartmentInvalid ||
-      this.phoneInvalid
+      !this.isPhoneValid()
     );
   }
 
