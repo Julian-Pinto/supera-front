@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, map } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export type OrderState = 'CREATED' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED' | 'DELIVERED';
 
@@ -36,7 +37,7 @@ export interface Order {
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
-  private readonly base = '/api/orders';
+  private readonly base = `${environment.apiUrl}/orders`;
 
   constructor(private http: HttpClient) {}
 

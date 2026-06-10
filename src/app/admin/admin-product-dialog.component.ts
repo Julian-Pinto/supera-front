@@ -198,6 +198,7 @@ export class AdminProductDialogComponent {
   mode: 'create' | 'edit';
   categories: Category[] = [];
   selectedImageName?: string;
+  selectedImageFile?: File;
 
   constructor(
     public dialogRef: MatDialogRef<AdminProductDialogComponent>,
@@ -231,7 +232,28 @@ export class AdminProductDialogComponent {
       return;
     }
     this.selectedImageName = file.name;
-    this.product.imageUrl = file.name;
+    this.selectedImageFile = file;
+  }
+
+  private buildProductFormData(): FormData {
+    const formData = new FormData();
+    formData.append('name', String(this.product.name ?? ''));
+    formData.append('category', String(this.product.category ?? ''));
+    formData.append('price', String(this.product.price ?? 0));
+    formData.append('description', String(this.product.description ?? ''));
+    formData.append('available', String(this.product.available ?? false));
+
+    if (this.product.idInvoice) {
+      formData.append('idInvoice', String(this.product.idInvoice));
+    }
+    if (this.product.profitMargin !== undefined && this.product.profitMargin !== null) {
+      formData.append('profitMargin', String(this.product.profitMargin));
+    }
+    if (this.selectedImageFile) {
+      formData.append('image', this.selectedImageFile);
+    }
+
+    return formData;
   }
 
   toggleAvailable(): void {
@@ -245,14 +267,9 @@ export class AdminProductDialogComponent {
   }
 
   saveProduct(): void {
-    const payload: Partial<Product> = {
-      ...this.product,
-      imageUrl: this.product.imageUrl || this.selectedImageName,
-    };
-
     const save$ = this.mode === 'edit' && this.product.id ?
-      this.productService.update(this.product.id, payload) :
-      this.productService.createProduct(payload);
+      this.productService.update(this.product.id, this.product) :
+      this.productService.createProduct(this.buildProductFormData());
 
     save$.subscribe({
       next: (result) => this.dialogRef.close(result),
