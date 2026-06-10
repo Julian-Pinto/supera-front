@@ -85,7 +85,12 @@
             <mat-icon>shopping_cart</mat-icon>
             Pedir
           </button>
-          <button mat-stroked-button disabled>
+          <button
+            mat-stroked-button
+            disabled
+            [color]="product.available ? 'primary' : 'warn'"
+            [class.sold-out]="!product.available"
+          >
             {{ product.available ? 'Disponible' : 'Agotado' }}
           </button>
         </mat-card-actions>

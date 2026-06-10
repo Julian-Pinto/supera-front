@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { Router } from '@angular/router';
 import { Product, ProductService, Category } from '../services/product.service';
 import { Order, OrderService, OrderState } from '../services/order.service';
 import { OrderAvailabilityService } from '../services/order-availability.service';
@@ -64,6 +65,7 @@ export class AdminComponent implements OnDestroy {
   private readonly productService = inject(ProductService);
   private readonly orderAvailabilityService = inject(OrderAvailabilityService);
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
 
   constructor() {
     this.loadOrders();
