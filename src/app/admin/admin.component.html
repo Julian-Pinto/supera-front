@@ -1,6 +1,5 @@
 <main class="admin-page">
   <mat-toolbar color="primary" class="admin-toolbar">
-<<<<<<< HEAD
     <div class="toolbar-title">Panel Administrativo</div>
     <button
       mat-stroked-button
@@ -10,10 +9,6 @@
     >
       {{ ordersEnabled ? 'Deshabilitar pedidos' : 'Habilitar pedidos' }}
     </button>
-=======
-    <div class="toolbar-title">Admin de Pedidos</div>
-    <button mat-stroked-button color="accent" (click)="logout()">Cerrar sesión</button>
->>>>>>> 0dddc5f2443bcffb2465eb9ed4838c36846ef91e
   </mat-toolbar>
 
   <section class="admin-summary">
@@ -28,7 +23,6 @@
     </div>
   </section>
 
-<<<<<<< HEAD
   <section class="orders-panel">
     <div class="panel-header">
       <h2>Pedidos solicitados</h2>
@@ -167,41 +161,5 @@
         </div>
       </div>
     </article>
-=======
-  <section class="orders-list">
-    <table>
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Tel</th>
-          <th>Torre</th>
-          <th>Apto</th>
-          <th>Total</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let order of orders()" (click)="openOrder(order)">
-          <td>{{ order.customerName || order.customer?.name || '-' }}</td>
-          <td>{{ order.phone || order.customer?.phone || '-' }}</td>
-          <td>{{ order.tower || order.customer?.tower || '-' }}</td>
-          <td>{{ order.apartment || order.customer?.apartment || '-' }}</td>
-          <td>{{ (order.total ?? formatTotal(order)) | currency:'COP':'symbol':'1.0-2' }}</td>
-          <td>
-            <div class="status-cell">
-              <button
-                mat-stroked-button
-                color="primary"
-                *ngIf="(order.state || 'CREATED') === 'CREATED'"
-                (click)="markOrderConfirmed(order); $event.stopPropagation()"
-              >
-                Confirmar pedido
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
->>>>>>> 0dddc5f2443bcffb2465eb9ed4838c36846ef91e
   </section>
 </main>

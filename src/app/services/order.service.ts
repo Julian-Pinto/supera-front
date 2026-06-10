@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-<<<<<<< HEAD
 export type OrderState = 'CREATED' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED' | 'DELIVERED';
 
 export interface OrderItem {
@@ -15,18 +14,6 @@ export interface OrderItem {
   // new/alternate field names returned by the service
   amount?: number;
   unitPrice?: number;
-=======
-export type OrderState = 'CREATED' | 'CONFIRMED' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
-
-export interface OrderItem {
-  productId: string | number;
-  quantity?: number;
-  amount?: number;
-  price?: number;
-  unitPrice?: number;
-  name?: string;
-  category?: string | null;
->>>>>>> 0dddc5f2443bcffb2465eb9ed4838c36846ef91e
   subTotal?: number;
 }
 
