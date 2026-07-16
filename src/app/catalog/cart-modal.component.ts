@@ -371,6 +371,7 @@ export class CartModalComponent {
         apartment: this.apartment.trim(),
         phone: this.phone.trim(),
       },
+      items: this.getItemsToDisplay(),
     });
   }
 

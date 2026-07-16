@@ -8,9 +8,10 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
-import { Product, ProductService, Category } from '../services/product.service';
+import { Product, ProductService, Category, BulkStockDecrease } from '../services/product.service';
 import { Order, OrderService, OrderState } from '../services/order.service';
 import { OrderAvailabilityService } from '../services/order-availability.service';
+import { ImageService, StoredImage } from '../services/image.service';
 import { AdminOrderDialogComponent } from './admin-order-dialog.component';
 import { AdminProductDialogComponent } from './admin-product-dialog.component';
 
@@ -36,6 +37,9 @@ export class AdminComponent implements OnDestroy {
   readonly categories = signal<Category[]>([]);
   readonly actionMessage = signal('');
   readonly productSearch = signal('');
+  readonly images = signal<StoredImage[]>([]);
+  readonly selectedImageName = signal('');
+  readonly uploadMessage = signal('');
   readonly filteredProducts = computed(() => {
     const query = this.productSearch().trim().toLowerCase();
     if (!query) {
@@ -64,6 +68,7 @@ export class AdminComponent implements OnDestroy {
   private readonly orderService = inject(OrderService);
   private readonly productService = inject(ProductService);
   private readonly orderAvailabilityService = inject(OrderAvailabilityService);
+  private readonly imageService = inject(ImageService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
 
@@ -72,6 +77,7 @@ export class AdminComponent implements OnDestroy {
     this.startOrderPolling();
     this.loadProducts();
     this.loadCategories();
+    this.loadImages();
   }
 
   get ordersEnabled(): boolean {
@@ -181,7 +187,11 @@ export class AdminComponent implements OnDestroy {
 
   openCreateProduct(): void {
     const dialogRef = this.dialog.open(AdminProductDialogComponent, {
-      data: { product: { available: true, category: '', name: '', price: 0 } as Partial<Product>, mode: 'create' },
+      data: {
+        product: { available: true, category: '', name: '', price: 0 } as Partial<Product>,
+        mode: 'create',
+        imageNames: this.images().map((image) => image.name),
+      },
       width: '640px',
     });
 
@@ -212,25 +222,43 @@ export class AdminComponent implements OnDestroy {
 
   markDelivered(order: Order, event: Event): void {
     event.stopPropagation();
-    if (!order.id || order.state === 'DELIVERED') {
+    const orderId = order.id;
+    if (!orderId || order.state === 'DELIVERED') {
       return;
     }
 
-    this.orderService.updateStatus(order.id, 'DELIVERED').subscribe({
+    const bulkDecreasePayload: BulkStockDecrease[] = (order.items ?? []).map((item) => ({
+      productId: item.productId,
+      quantityToSubtract: item.quantity ?? item.amount ?? 0,
+    })).filter((item) => item.productId && item.quantityToSubtract > 0);
+
+    if (!bulkDecreasePayload.length) {
+      this.actionMessage.set('No hay productos válidos para descontar del stock.');
+      return;
+    }
+
+    this.productService.bulkDecreaseStock(bulkDecreasePayload).subscribe({
       next: () => {
-        this.orders.update((orders) =>
-          orders.map((item) => (item.id === order.id ? { ...item, state: 'DELIVERED' } : item))
-        );
-        this.actionMessage.set(`Pedido ${order.id} marcado como entregado`);
+        this.orderService.updateStatus(orderId, 'DELIVERED').subscribe({
+          next: () => {
+            this.orders.update((orders) =>
+              orders.map((item) => (item.id === order.id ? { ...item, state: 'DELIVERED' } : item))
+            );
+            this.actionMessage.set(`Pedido ${order.id} marcado como entregado y stock descontado`);
+          },
+          error: () => {
+            this.actionMessage.set('Se descontó el stock, pero no se pudo marcar el pedido como entregado');
+          },
+        });
       },
       error: () => {
-        this.actionMessage.set('No se pudo marcar el pedido como entregado');
+        this.actionMessage.set('No se pudo descontar el stock de los productos del pedido');
       },
     });
   }
 
   private loadProducts(): void {
-    this.productService.findAll().subscribe({
+    this.productService.findAllAdmin().subscribe({
       next: (products) => this.products.set(products),
       error: () => this.actionMessage.set('No se pudieron cargar los productos'),
     });
@@ -276,6 +304,44 @@ export class AdminComponent implements OnDestroy {
     this.productService.findCategories().subscribe({
       next: (categories) => this.categories.set(categories.map((category) => this.normalizeCategory(category))),
       error: () => this.actionMessage.set('No se pudieron cargar las categorías'),
+    });
+  }
+
+  private loadImages(): void {
+    this.imageService.listImages().subscribe({
+      next: (images) => this.images.set(images),
+      error: () => this.uploadMessage.set('No se pudieron cargar las imágenes del almacenamiento.'),
+    });
+  }
+
+  onImageFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    if (!files.length) {
+      return;
+    }
+
+    this.imageService.uploadImages(files).subscribe({
+      next: (uploadedImages) => {
+        this.images.update((current) => [...current, ...uploadedImages]);
+        this.uploadMessage.set(`${uploadedImages.length} imagen(es) cargada(s) correctamente.`);
+        input.value = '';
+      },
+      error: () => {
+        this.uploadMessage.set('No se pudieron subir las imágenes.');
+      },
+    });
+  }
+
+  deleteImage(image: StoredImage): void {
+    this.imageService.deleteImage(image.name).subscribe({
+      next: () => {
+        this.images.update((current) => current.filter((item) => item.name !== image.name));
+        this.uploadMessage.set(`La imagen ${image.name} fue eliminada.`);
+      },
+      error: () => {
+        this.uploadMessage.set('No se pudo eliminar la imagen.');
+      },
     });
   }
 
@@ -343,9 +409,18 @@ export class AdminComponent implements OnDestroy {
   }
 
   getSalePrice(product: Product): number {
+    // Prefer explicit priceWithProfit if provided by backend
+    if (product.priceWithProfit !== undefined && product.priceWithProfit !== null) {
+      const p = Number(product.priceWithProfit);
+      const rounded = this.productService.roundPriceToHundred(p);
+      return rounded ?? Math.ceil(p / 100) * 100;
+    }
+
     const price = Number(product.price ?? 0);
     const margin = Number(product.profitMargin ?? 0);
-    return price + price * margin / 100;
+    const calc = price + (price * margin) / 100;
+    const roundedCalc = this.productService.roundPriceToHundred(calc);
+    return roundedCalc ?? Math.ceil(calc / 100) * 100;
   }
 
   formatTotal(order: Order): number {

@@ -1,8 +1,28 @@
 <main class="catalog-page">
   <mat-toolbar color="primary" class="catalog-toolbar">
     <div class="toolbar-content">
-      <div class="toolbar-title">Catálogo del Supermercado</div>
-      <mat-form-field appearance="outline" class="search-field">
+      <div class="toolbar-title">
+        <img *ngIf="showLogo" src="assets/company-logo.png" alt="Company logo" class="company-logo" (error)="logoLoadError()" />
+        <span *ngIf="!showLogo">Catálogo del Supermercado</span>
+      </div>
+      <button
+        mat-flat-button
+        class="order-now-btn"
+        (click)="openCart()"
+        matTooltip="Ver carrito"
+        [matBadge]="cartItemCount()"
+        matBadgeColor="accent"
+        [matBadgeHidden]="cartItemCount() === 0"
+      >
+        <span class="order-text">{{ cartItemCount() === 1 ? 'Producto' : 'Productos' }}</span>
+        <mat-icon class="order-icon">shopping_cart</mat-icon>
+      </button>
+    </div>
+  </mat-toolbar>
+
+  <section class="catalog-header">
+    <div class="search-row">
+      <mat-form-field appearance="outline" class="search-field centered-search">
         <mat-label>Buscar producto</mat-label>
         <input
           matInput
@@ -12,26 +32,6 @@
         />
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
-    </div>
-  </mat-toolbar>
-
-  <section class="catalog-header">
-    <div class="header-text">
-      <h1>Haz tu pedido</h1>
-      <p>Selecciona los productos que quieras comprar y agrégalos a tu carrito.</p>
-    </div>
-    <div class="header-cart" (click)="openCart()">
-      <button
-        mat-icon-button
-        matTooltip="Ver carrito"
-        [matBadge]="cartItemCount()"
-        matBadgeColor="accent"
-        [matBadgeHidden]="cartItemCount() === 0"
-        class="cart-button"
-      >
-        <mat-icon>shopping_cart</mat-icon>
-      </button>
-      <span class="cart-label">{{ cartItemCount() }} item{{ cartItemCount() !== 1 ? 's' : '' }}</span>
     </div>
   </section>
 
@@ -44,7 +44,10 @@
     <article class="product-card" *ngFor="let product of filteredProducts()">
       <mat-card>
         <div class="product-image" aria-hidden="true">
-          {{ product.name.charAt(0) }}
+          <img *ngIf="product.imageUrl; else noProductImage" [src]="product.imageUrl" [alt]="product.name" />
+          <ng-template #noProductImage>
+            {{ product.name.charAt(0) }}
+          </ng-template>
         </div>
 
         <mat-card-header>
@@ -54,7 +57,7 @@
 
         <mat-card-content>
           <div class="product-meta">
-            <span class="product-price">{{ product.price | currency:'COP':'symbol':'1.0-2' }}</span>
+            <span class="product-price">$ {{ product.price | number:'1.0-0' }}</span>
             <div class="quantity-control">
               <button
                 mat-mini-fab
@@ -83,15 +86,7 @@
         <mat-card-actions>
           <button mat-flat-button color="primary" (click)="addToCart(product)" [disabled]="!product.available">
             <mat-icon>shopping_cart</mat-icon>
-            Pedir
-          </button>
-          <button
-            mat-stroked-button
-            disabled
-            [color]="product.available ? 'primary' : 'warn'"
-            [class.sold-out]="!product.available"
-          >
-            {{ product.available ? 'Disponible' : 'Agotado' }}
+            Agregar
           </button>
         </mat-card-actions>
       </mat-card>

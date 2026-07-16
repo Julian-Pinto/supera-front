@@ -10,16 +10,24 @@ export interface Product {
   price: number;
   description?: string;
   imageUrl?: string;
+  imageName?: string;
   available: boolean;
   idInvoice?: string;
   profitMargin?: number;
   quantity?: number;
+  expirationDate?: string;
+  priceWithProfit?: number;
 }
 
 export interface Category {
   id?: string | { [key: string]: any };
   _id?: string;
   categoryName: string;
+}
+
+export interface BulkStockDecrease {
+  productId: string;
+  quantityToSubtract: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -62,8 +70,30 @@ export class ProductService {
     };
   }
 
+  private normalizeProduct(product: Product): Product {
+    const normalizedPrice = product.priceWithProfit ?? product.price;
+
+    return {
+      ...product,
+      price: normalizedPrice,
+      priceWithProfit: product.priceWithProfit ?? normalizedPrice,
+      quantity: product.quantity ?? 0,
+      expirationDate: product.expirationDate,
+      profitMargin: product.profitMargin,
+    };
+  }
+
   findAll(): Observable<Product[]> {
     const url = this.base;
+    this.browserLog('[ProductService] GET', url);
+    return this.http.get<Product[]>(url).pipe(
+      tap((response) => this.browserLog('[ProductService] GET', url, 'response', response)),
+      map((products) => products.map((product) => this.normalizeProduct(product)))
+    );
+  }
+
+  findAllAdmin(): Observable<Product[]> {
+    const url = `${this.base}/admin`;
     this.browserLog('[ProductService] GET', url);
     return this.http.get<Product[]>(url).pipe(
       tap((response) => this.browserLog('[ProductService] GET', url, 'response', response))
@@ -91,13 +121,31 @@ export class ProductService {
     return {
       name: product.name,
       category: product.category,
-      price: product.price,
+      price: this.roundPriceToHundred(product.price),
       description: product.description,
       imageUrl: product.imageUrl,
+      imageName: product.imageName,
       available: product.available,
       idInvoice: product.idInvoice,
       profitMargin: product.profitMargin,
+      quantity: product.quantity,
+      expirationDate: product.expirationDate,
+      priceWithProfit: this.roundPriceToHundred(product.priceWithProfit ?? product.price),
     };
+  }
+
+  public roundPriceToHundred(value?: number | null): number | undefined {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+
+    const n = Number(value);
+    if (!isFinite(n) || isNaN(n)) {
+      return undefined;
+    }
+
+    // Round up to nearest multiple of 100 and remove cents
+    return Math.ceil(n / 100) * 100;
   }
 
   save(product: Partial<Product>): Observable<Product> {
@@ -112,7 +160,22 @@ export class ProductService {
   createProduct(productData: FormData): Observable<Product> {
     const url = this.base;
     this.browserLog('[ProductService] POST', url, 'multipart/form-data');
-    return this.http.post<Product>(url, productData).pipe(
+    // Normalize price fields in FormData to ensure rounding to 100s
+    const normalized = new FormData();
+    for (const entry of productData.entries()) {
+      const [key, val] = entry as [string, FormDataEntryValue];
+      if (key === 'price' || key === 'priceWithProfit') {
+        const num = Number(val as string);
+        const rounded = this.roundPriceToHundred(num);
+        if (rounded !== undefined) {
+          normalized.append(key, String(rounded));
+          continue;
+        }
+      }
+      normalized.append(key, val);
+    }
+
+    return this.http.post<Product>(url, normalized).pipe(
       tap((response) => this.browserLog('[ProductService] POST', url, 'response', response))
     );
   }
@@ -158,6 +221,14 @@ export class ProductService {
     this.browserLog('[ProductService] PATCH', url, 'body', body);
     return this.http.patch<void>(url, body).pipe(
       tap((response) => this.browserLog('[ProductService] PATCH', url, 'response', response))
+    );
+  }
+
+  bulkDecreaseStock(items: BulkStockDecrease[]): Observable<void> {
+    const url = `${this.base}/bulk-decrease-stock`;
+    this.browserLog('[ProductService] POST', url, 'body', items);
+    return this.http.post<void>(url, items).pipe(
+      tap((response) => this.browserLog('[ProductService] POST', url, 'response', response))
     );
   }
 }

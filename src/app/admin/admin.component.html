@@ -91,25 +91,27 @@
         <table>
           <thead>
             <tr>
+              <th>Cant</th>
               <th>Nombre</th>
-              <th>Categoría</th>
-              <th>Precio</th>
+              <th>Precio de compra</th>
+              <th>Ganancia</th>
               <th>Precio de venta</th>
               <th>Disponibilidad</th>
-              <th>id factura</th>
-              <th>Porcentaje de ganancia</th>
+              <th>ID Factura</th>
+              <th>Categoría</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let product of filteredProducts()">
+              <td>{{ product.quantity ?? 0 }}</td>
               <td>{{ product.name }}</td>
-              <td>{{ product.category }}</td>
-              <td>{{ product.price | currency:'COP':'symbol':'1.0-2' }}</td>
-              <td>{{ getSalePrice(product) | currency:'COP':'symbol':'1.0-2' }}</td>
+              <td>{{ product.price | number:'1.0-2' }}</td>
+              <td>{{ product.profitMargin != null ? (product.profitMargin + '%') : '-' }}</td>
+              <td>{{ getSalePrice(product) | number:'1.0-0' }}</td>
               <td>{{ product.available ? 'Disponible' : 'No disponible' }}</td>
               <td>{{ product.idInvoice || '-' }}</td>
-              <td>{{ product.profitMargin != null ? (product.profitMargin + '%') : '-' }}</td>
+              <td>{{ product.category }}</td>
               <td class="row-actions">
                 <button mat-icon-button color="primary" aria-label="Editar producto" (click)="openEditProduct(product)">
                   <mat-icon>edit</mat-icon>
@@ -124,6 +126,39 @@
         <div class="empty-state" *ngIf="products().length === 0">
           No hay productos cargados.
         </div>
+      </div>
+    </article>
+
+    <article class="admin-panel panel-card">
+      <div class="panel-header">
+        <h2>Administrar imágenes</h2>
+      </div>
+      <div class="panel-content">
+        <div class="image-upload-area">
+          <input type="file" accept="image/*" multiple hidden #imageInput (change)="onImageFilesSelected($event)" />
+          <button mat-flat-button color="primary" type="button" (click)="imageInput.click()">
+            Cargar imágenes
+          </button>
+          <div class="image-upload-message" *ngIf="uploadMessage()">{{ uploadMessage() }}</div>
+        </div>
+
+        <div class="image-list" *ngIf="images().length; else noImages">
+          <div class="image-item" *ngFor="let image of images()">
+            <div class="image-details">
+              <img *ngIf="image.url" [src]="image.url" [alt]="image.name" class="image-preview" />
+            </div>
+            <div class="image-data">
+              <button mat-icon-button color="warn" aria-label="Eliminar imagen" (click)="deleteImage(image)">
+              <mat-icon>delete</mat-icon>
+            </button>
+              <strong><small>{{ image.key }}</small></strong>
+            </div>
+            
+          </div>
+        </div>
+        <ng-template #noImages>
+          <div class="empty-state">No hay imágenes cargadas.</div>
+        </ng-template>
       </div>
     </article>
 
